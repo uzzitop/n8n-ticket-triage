@@ -1,0 +1,198 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e09878fc-98f2-4e36-91b3-4e7c258c96cc",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a26e8ade-0934-4fb5-a38a-4d9cd8921558",
+              "name": "mensaje",
+              "value": "Gracias por la ayuda de ayer, ya quedó resuelto.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "b5f6b6b7-8518-41f9-ab23-6ab4d933af74",
+      "name": "mensaje"
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10000",
+          "mode": "list",
+          "cachedResultName": "Soporte Monitor"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10003",
+          "mode": "list",
+          "cachedResultName": "Tarea"
+        },
+        "summary": "={{ $json.mensaje }}",
+        "additionalFields": {
+          "description": "=Resumen: {{ $json.resumen }} \nUrgencia: {{ $json.urgencia }} \nCategoria: {{ $json.categoria }} \nRespuesta sugerida: {{ $json.respuesta }}"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        896,
+        0
+      ],
+      "id": "7d94ced7-925a-4cc1-87f9-4b93da3d509b",
+      "name": "Create an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "SxHkajlsBD5yaWcS",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\": \"qwen3.5:9b\", \"stream\": false, \"format\": \"json\", \"prompt\": \"Clasifica este mensaje de soporte. Responde SOLO con un JSON con 4 claves: categoria (pago, conectividad, hardware u otro), urgencia (alta, media o baja), resumen (una frase corta) y respuesta (respuesta sugerida, corta y amable, en español). Mensaje: {{ $json.mensaje }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "efcfc067-f7a2-45a5-8a1d-9e54a6c8270a",
+      "name": "HTTP Request - Ollama"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d19cfdb-bd08-4785-b36f-aa42928f678d",
+              "name": "=resumen",
+              "value": "={{ JSON.parse($json.response).resumen }}",
+              "type": "string"
+            },
+            {
+              "id": "6f8814a3-1ebd-4f44-bec4-f9aeda9afb88",
+              "name": "respuesta",
+              "value": "={{ JSON.parse($json.response).respuesta }}",
+              "type": "string"
+            },
+            {
+              "id": "b3e48d71-3b48-4ca9-9ccf-6d446962159e",
+              "name": "mensaje",
+              "value": "={{ $('mensaje').item.json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "5a424823-10ab-478b-8413-ad9eaa088039",
+              "name": "=urgencia",
+              "value": "={{ JSON.parse($json.response).urgencia }}",
+              "type": "string"
+            },
+            {
+              "id": "7cba5861-df6e-4a78-ba53-a5fad25e8ef2",
+              "name": "categoria",
+              "value": "={{ JSON.parse($json.response).categoria }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "d41f3f27-86b5-4abd-a41a-7c8a7f911195",
+      "name": "Collect Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mensaje": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Ollama": {
+      "main": [
+        [
+          {
+            "node": "Collect Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Data": {
+      "main": [
+        [
+          {
+            "node": "Create an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9582d081-903b-4285-a88a-b7acfe654ac4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "00bcb8ec51fe5f9f230e5f646cd79af8229105c33953c8f95c979aec2799af40"
+  },
+  "nodeGroups": [],
+  "id": "Jeozsw5qWMFJTwMR",
+  "tags": []
+}
